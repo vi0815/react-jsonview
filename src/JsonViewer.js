@@ -29,18 +29,11 @@ export default function JsonViewer(props) {
           return (
             <TextField
               id={String(index)}
+              key={String(index)}
               label={key}
               variant="standard"
               defaultValue={data[key]}
-              endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle password visibility"
-                      onClick={(event) => handleDeleteButton(event.key)}
-                      edge="end"
-                    ></IconButton>
-                  </InputAdornment>
-                }
+
             />
           );
         })}
