@@ -9,69 +9,69 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import InputAdornment from '@mui/material/InputAdornment';
 import IconButton from '@mui/material/IconButton';
-import { Delete, AddCircleOutlineIcon, KeyboardArrowUpRounded, KeyboardArrowDownRounded } from '@mui/icons-material';
+import {
+  Delete,
+  AddCircleOutlineIcon,
+  KeyboardArrowUpRounded,
+  KeyboardArrowDownRounded,
+} from '@mui/icons-material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import Autocomplete from '@mui/material/Autocomplete';
 
-
-
-
-
 export default function JsonViewer(props) {
   const [data, setData] = React.useState(props.data);
-  const [newField, setNewField] = React.useState(null)
+  const [newField, setNewField] = React.useState(null);
 
   const [anchorEl, setAnchorEl] = React.useState(null);
 
   function handleDeleteButton(deleteKey) {
-    let newHash = {}
-    Object.keys(data).map(key => {
+    let newHash = {};
+    Object.keys(data).map((key) => {
       if (key != deleteKey) {
-        newHash[key] = data[key]
+        newHash[key] = data[key];
       }
-    })
-    setData(newHash)
+    });
+    setData(newHash);
   }
 
   function moveItem(direction, pivotKey) {
-    let position
-    let keyValue
+    let position;
+    let keyValue;
     Object.keys(data).map((key, index) => {
-        if (key === pivotKey) {
-          position = index
-          keyValue = data[key]
-        }
-    })
+      if (key === pivotKey) {
+        position = index;
+        keyValue = data[key];
+      }
+    });
 
-    let newPosition = direction==="up"?position-1:position+1
-    let newResult = {}
-    let newIndex = 0
-    console.log("Oldposition: " + position + " newposition: " + newPosition)
+    let newPosition = direction === 'up' ? position - 1 : position + 1;
+    let newResult = {};
+    let newIndex = 0;
+    console.log('Oldposition: ' + position + ' newposition: ' + newPosition);
     Object.keys(data).map((key, index) => {
       if (newIndex === newPosition) {
         // insert moved value here
-        newResult[pivotKey] = keyValue
-        newIndex += 1
-        console.log("replaced at position: " + newIndex)
+        newResult[pivotKey] = keyValue;
+        newIndex += 1;
+        console.log('replaced at position: ' + newIndex);
       }
       if (index !== position) {
-        newResult[key] = data[key]
-        newIndex += 1
+        newResult[key] = data[key];
+        newIndex += 1;
       }
       if (newIndex === newPosition) {
         // insert moved value here
-        newResult[pivotKey] = keyValue
-        newIndex += 1
-        console.log("replaced at position: " + newIndex)
+        newResult[pivotKey] = keyValue;
+        newIndex += 1;
+        console.log('replaced at position: ' + newIndex);
       }
-    })
-    console.log(newResult)
-    setData(newResult)
+    });
+    console.log(newResult);
+    setData(newResult);
   }
 
-function generateObjectFieldTextFields() {
-  return (
-    Object.keys(data).map((key, index) => {
+  function generateObjectFieldTextFields() {
+    return Object.keys(data).map((key, index) => {
       return (
         <TextField
           id={String(index)}
@@ -82,122 +82,130 @@ function generateObjectFieldTextFields() {
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
-            <Box
-              sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                '& > :not(style)': {
-                  m: 0,
-                  mt:.5,
-                  width: 5,
-                  height: 5,
-                },
-              }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    '& > :not(style)': {
+                      m: 0,
+                      mt: 0.5,
+                      width: 5,
+                      height: 5,
+                    },
+                  }}
+                >
                   <IconButton
                     aria-label="move upwards"
                     size="small"
-                    disabled={index===0?true:false}
-                    onClick={ () => {moveItem("up", key)}}       
-                    ><KeyboardArrowUpRounded fontSize="tiny"/>
+                    disabled={index === 0 ? true : false}
+                    onClick={() => {
+                      moveItem('up', key);
+                    }}
+                  >
+                    <KeyboardArrowUpRounded fontSize="tiny" />
                   </IconButton>
 
                   <IconButton
                     aria-label="move downwards"
                     size="small"
-                    disabled={index===(Object.keys(data).length -1)?true:false}
-                    onClick={ () => {moveItem("down", key)}}
-                    >
-                  <KeyboardArrowDownRounded fontSize="tiny"/>
+                    disabled={
+                      index === Object.keys(data).length - 1 ? true : false
+                    }
+                    onClick={() => {
+                      moveItem('down', key);
+                    }}
+                  >
+                    <KeyboardArrowDownRounded fontSize="tiny" />
                   </IconButton>
-              </Box>
+                </Box>
 
-              <IconButton
-                    aria-label="delete item"
-                    size="small"
-                    onClick={() => handleDeleteButton(key)}>
+                <IconButton
+                  aria-label="delete item"
+                  size="small"
+                  onClick={() => handleDeleteButton(key)}
+                >
                   <Delete fontSize="tiny" />
-              </IconButton>
+                </IconButton>
               </InputAdornment>
-            )
+            ),
           }}
         />
       );
-    })
-  )
-}
+    });
+  }
 
-function clickAddItem(event) {
-  setAnchorEl(event.currentTarget)
-}
+  function clickAddItem(event) {
+    setAnchorEl(event.currentTarget);
+  }
 
-function closeAddItem() {
-  setAnchorEl(null)
-}
+  function closeAddItem() {
+    setAnchorEl(null);
+  }
 
-const open = Boolean(anchorEl)
+  const open = Boolean(anchorEl);
 
-function generateTitleLine() {
-  return (
-    <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-    <TextField id="input-with-sx" label={props.title} variant="standard" />
-    <IconButton
-      aria-label="Add entry"
-      size="small"
-      onClick={clickAddItem}>
-        <Delete fontSize="small"/>
-    </IconButton>
-  </Box>
-  )
-}
+  function generateTitleLine() {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+        <Typo id="input-with-sx" label={props.title} variant="standard" 
+        InputProps={{
+          readOnly: true }}/>
+        <IconButton aria-label="Add entry" size="small" onClick={clickAddItem}>
+          <Delete fontSize="small" />
+        </IconButton>
+      </Box>
+    );
+  }
 
-function addField() {
-  let newResult = {...data}
-  newResult[newField] = "asas"
-  setData(newResult)
-}
+  function addField() {
+    let newResult = { ...data };
+    newResult[newField] = 'asas';
+    setData(newResult);
+  }
 
-function getPopOver() {
-  return(
-    <Popover
-    open={open}
-    anchorEl={anchorEl}
-    onClose={closeAddItem}
-    anchorOrigin={{
-      vertical: "bottom", horizontal: "left"
-    }}
->
-<Box
-        component="form"
-        sx={{
-          '& > :not(style)': { m: 0, height: '50ch' },
+  function getPopOver() {
+    return (
+      <Popover
+        open={open}
+        anchorEl={anchorEl}
+        onClose={closeAddItem}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
         }}
-        noValidate
-        autoComplete="off"
       >
-
-<TextField
-      id="combo-box-demo"
-      sx={{ width: '25ch' }}
-      onChange={(event) => setNewField(event.target.value)}
-      InputProps={{
-        endAdornment: (
-          <InputAdornment position="end">
-                          <IconButton
+        <Box
+          component="form"
+          sx={{
+            '& > :not(style)': { m: 0, height: '50ch' },
+          }}
+          noValidate
+          autoComplete="off"
+        >
+          <TextField
+            id="combo-box-demo"
+            sx={{ width: '25ch' }}
+            onChange={(event) => setNewField(event.target.value)}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
                     aria-label="delete item"
                     size="small"
-                    onClick={() => addField()}>
-                  <AddIcon fontSize="tiny" />
-              </IconButton>
-            </InputAdornment>
-        )
-      }}
-    />
-    </Box>
-        </Popover>
-  )
-}
+                    onClick={() => addField()}
+                  >
+                    <AddIcon fontSize="tiny" />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
+      </Popover>
+    );
+  }
 
-return (
+  return (
     <div>
       <Box
         component="form"
@@ -207,7 +215,6 @@ return (
         noValidate
         autoComplete="off"
       >
-
         {generateTitleLine()}
         {getPopOver()}
 
@@ -220,7 +227,7 @@ return (
 const fieldNames = [
   { label: 'addressLine1' },
   { label: 'addressLine2' },
-  { label: 'city'},
-  { label: 'postcode'},
-  { label: 'country'}
-]
+  { label: 'city' },
+  { label: 'postcode' },
+  { label: 'country' },
+];
