@@ -5,7 +5,9 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import InputAdornment from '@mui/material/InputAdornment';
 import IconButton from '@mui/material/IconButton';
-import { Delete,  KeyboardArrowUpRounded, KeyboardArrowDownRounded } from '@mui/icons-material';
+import { Delete, AddCircleOutlineIcon, KeyboardArrowUpRounded, KeyboardArrowDownRounded } from '@mui/icons-material';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+
 
 
 
@@ -112,6 +114,15 @@ function generateObjectFieldTextFields() {
         />
       );
     })
+  )
+}
+
+function generateTitleLine() {
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+    <AddCircleOutlineIcon />
+    <TextField id="input-with-sx" label="With sx" variant="standard" />
+  </Box>
   )
 }
 

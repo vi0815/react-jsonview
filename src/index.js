@@ -14,7 +14,8 @@ const exampleData = {
 
 root.render(
   <StrictMode>
-    <JsonViewer 
+    <JsonViewer
+      title="Venue Address"
       data={exampleData}
       />
   </StrictMode>
