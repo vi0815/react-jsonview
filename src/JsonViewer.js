@@ -7,6 +7,8 @@ import InputAdornment from '@mui/material/InputAdornment';
 import IconButton from '@mui/material/IconButton';
 import { Delete, AddCircleOutlineIcon, KeyboardArrowUpRounded, KeyboardArrowDownRounded } from '@mui/icons-material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import Autocomplete from '@mui/material/Autocomplete';
+
 
 
 
@@ -117,11 +119,17 @@ function generateObjectFieldTextFields() {
   )
 }
 
+
 function generateTitleLine() {
   return (
     <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-    <AddCircleOutlineIcon />
-    <TextField id="input-with-sx" label="With sx" variant="standard" />
+    <TextField id="input-with-sx" label={props.title} variant="standard" />
+    <IconButton
+      aria-label="Add entry"
+      size="small"
+      onClick={() => handleAddItem()}>
+        <Delete fontSize="small"/>
+    </IconButton>
   </Box>
   )
 }
@@ -136,9 +144,25 @@ return (
         noValidate
         autoComplete="off"
       >
+            <Autocomplete
+      disablePortal
+      freeSolo
+      id="combo-box-demo"
+      options={fieldNames}
+      sx={{ width: 300 }}
+      renderInput={(params) => <TextField {...params} label="Movie" />}
+    />
         {generateTitleLine()}
         {generateObjectFieldTextFields()}
       </Box>
     </div>
   );
 }
+
+const fieldNames = [
+  { label: 'addressLine1' },
+  { label: 'addressLine2' },
+  { label: 'city'},
+  { label: 'postcode'},
+  { label: 'country'}
+]
