@@ -1,6 +1,10 @@
 import React from 'react';
 import './style.css';
 import TextField from '@mui/material/TextField';
+import Popover from '@mui/material/Popover';
+import Button from '@mui/material/Button';
+import AddIcon from '@mui/icons-material/Add';
+
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -15,6 +19,9 @@ import Autocomplete from '@mui/material/Autocomplete';
 
 export default function JsonViewer(props) {
   const [data, setData] = React.useState(props.data);
+  const [newField, setNewField] = React.useState(null)
+
+  const [anchorEl, setAnchorEl] = React.useState(null);
 
   function handleDeleteButton(deleteKey) {
     let newHash = {}
@@ -71,7 +78,7 @@ function generateObjectFieldTextFields() {
           key={String(index)}
           label={key}
           variant="standard"
-          value={data[key]}
+          defaultValue={data[key]}
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
@@ -119,6 +126,15 @@ function generateObjectFieldTextFields() {
   )
 }
 
+function clickAddItem(event) {
+  setAnchorEl(event.currentTarget)
+}
+
+function closeAddItem() {
+  setAnchorEl(null)
+}
+
+const open = Boolean(anchorEl)
 
 function generateTitleLine() {
   return (
@@ -127,10 +143,57 @@ function generateTitleLine() {
     <IconButton
       aria-label="Add entry"
       size="small"
-      onClick={() => handleAddItem()}>
+      onClick={clickAddItem}>
         <Delete fontSize="small"/>
     </IconButton>
   </Box>
+  )
+}
+
+function addField() {
+  let newResult = {...data}
+  newResult[newField] = "asas"
+  setData(newResult)
+}
+
+function getPopOver() {
+  return(
+    <Popover
+    open={open}
+    anchorEl={anchorEl}
+    onClose={closeAddItem}
+    anchorOrigin={{
+      vertical: "bottom", horizontal: "left"
+    }}
+>
+<Box
+        component="form"
+        sx={{
+          '& > :not(style)': { m: 0, height: '50ch' },
+        }}
+        noValidate
+        autoComplete="off"
+      >
+
+<TextField
+      id="combo-box-demo"
+      sx={{ width: '25ch' }}
+      onChange={(event) => setNewField(event.target.value)}
+      InputProps={{
+        endAdornment: (
+          <InputAdornment position="end">
+                          <IconButton
+                    aria-label="delete item"
+                    size="small"
+                    onClick={() => addField()}>
+                  <AddIcon fontSize="tiny" />
+              </IconButton>
+            </InputAdornment>
+        )
+      }}
+    />
+    </Box>
+        </Popover>
   )
 }
 
@@ -144,15 +207,10 @@ return (
         noValidate
         autoComplete="off"
       >
-            <Autocomplete
-      disablePortal
-      freeSolo
-      id="combo-box-demo"
-      options={fieldNames}
-      sx={{ width: 300 }}
-      renderInput={(params) => <TextField {...params} label="Movie" />}
-    />
+
         {generateTitleLine()}
+        {getPopOver()}
+
         {generateObjectFieldTextFields()}
       </Box>
     </div>
