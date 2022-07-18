@@ -14,6 +14,7 @@ export default function DemoJsonViewer() {
         title={'Venue Address'}
         data={exampleData}
         onChange={(result) => {
+          console.log("back")
           setExampleData(result);
         }}
       />

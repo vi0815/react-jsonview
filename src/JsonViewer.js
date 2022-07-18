@@ -40,6 +40,10 @@ export default function JsonViewer(props) {
     props.onChange({...data})
   }
 
+  React.useEffect(() => {
+    sendData()
+  }, [data]);
+
   function moveItem(direction, pivotKey) {
     let position;
     let keyValue;
