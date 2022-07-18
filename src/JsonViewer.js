@@ -36,6 +36,10 @@ export default function JsonViewer(props) {
     setData(newHash);
   }
 
+  function sendData() {
+    props.onChange({...data})
+  }
+
   function moveItem(direction, pivotKey) {
     let position;
     let keyValue;
