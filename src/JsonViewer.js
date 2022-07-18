@@ -24,6 +24,8 @@ export default function JsonViewer(props) {
 
   const [anchorEl, setAnchorEl] = React.useState(null);
 
+  const [moved, setMoved] = React.useState(" ");
+
   function handleDeleteButton(deleteKey) {
     let newHash = {};
     Object.keys(data).map((key) => {
@@ -68,17 +70,34 @@ export default function JsonViewer(props) {
     });
     console.log(newResult);
     setData(newResult);
+    if (moved === " ") {
+      setMoved("")
+    } else {
+        setMoved(" ")
+      }
+    
+  }
+
+  function changeData(event) {
+    const id = event.target.id
+    // has the value changed?
+    if (data[id] !== event.target.value) {
+      let newData = {...data}
+      newData[id] = event.target.value
+      setData(newData)
+    }
   }
 
   function generateObjectFieldTextFields() {
     return Object.keys(data).map((key, index) => {
       return (
         <TextField
-          id={String(index)}
-          key={String(index)}
+          id={key}
+          key={key}
           label={key}
           variant="standard"
           defaultValue={data[key]}
+          onBlur={changeData}
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
@@ -220,6 +239,7 @@ export default function JsonViewer(props) {
         {getPopOver()}
 
         {generateObjectFieldTextFields()}
+        {moved}
       </Box>
     </div>
   );
