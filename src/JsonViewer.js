@@ -4,7 +4,7 @@ import TextField from '@mui/material/TextField';
 import Popover from '@mui/material/Popover';
 import Button from '@mui/material/Button';
 import AddIcon from '@mui/icons-material/Add';
-
+import { Typography } from "@mui/material"
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -20,7 +20,7 @@ import Autocomplete from '@mui/material/Autocomplete';
 
 export default function JsonViewer(props) {
   const [data, setData] = React.useState(props.data);
-  const [newField, setNewField] = React.useState(null);
+  const [newField, setNewField] = React.useState("");
 
   const [anchorEl, setAnchorEl] = React.useState(null);
 
@@ -147,11 +147,10 @@ export default function JsonViewer(props) {
   function generateTitleLine() {
     return (
       <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-        <Typo id="input-with-sx" label={props.title} variant="standard" 
-        InputProps={{
-          readOnly: true }}/>
+        <Typography variant="h6" component="h6">{props.title}</Typography>
+
         <IconButton aria-label="Add entry" size="small" onClick={clickAddItem}>
-          <Delete fontSize="small" />
+          <AddIcon fontSize="small" />
         </IconButton>
       </Box>
     );
@@ -159,8 +158,9 @@ export default function JsonViewer(props) {
 
   function addField() {
     let newResult = { ...data };
-    newResult[newField] = 'asas';
+    newResult[newField] = '';
     setData(newResult);
+    setNewField("")
   }
 
   function getPopOver() {
@@ -186,6 +186,7 @@ export default function JsonViewer(props) {
             id="combo-box-demo"
             sx={{ width: '25ch' }}
             onChange={(event) => setNewField(event.target.value)}
+            value={newField}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
