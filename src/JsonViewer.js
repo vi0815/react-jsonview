@@ -4,6 +4,8 @@ import Popover from '@mui/material/Popover';
 import AddIcon from '@mui/icons-material/Add';
 import { Typography } from '@mui/material';
 import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+
 import InputAdornment from '@mui/material/InputAdornment';
 import IconButton from '@mui/material/IconButton';
 import ListItemText from '@mui/material/ListItemText';
@@ -55,15 +57,59 @@ function convertOuterObjectToInternal(data) {
 export default function JsonViewer(props) {
   const [mapState, dispatch] = React.useReducer(reducer, convertOuterObjectToInternal(props.data));
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const [newField, setNewField] = React.useState("")
 
   function reducer(state, action) {
+    console.log(action.type)
     let newState
     if (action.type === "change") {
       newState = changeFieldValue(state, action.id, action.value)
-    } else {
-      
-    }
+    } else if (action.type === "up" || action.type ==="down") {
+      newState = moveItem(state, action.type, action.id)
+    } else if (action.type === "add") {
+      newState = addField(state, action.value)
+    } else if (action.type === "flip") {
+      newState = flipState(state, action.id)
+    }    return newState
+  }
+
+  function flipState(state, id) {
+    let newState = cloneMapState(state)
+    newState[id].checked = !newState[id].checked
     return newState
+  }
+
+  function addField(state, value) {
+    // check if this label already exists
+    if (getAllLabelsFromState(state).includes(value)) {
+      return state
+    }
+
+    let newState = cloneMapState(state)
+    newState.push({
+      label: value,
+      checked: true,
+      preset: false
+    })
+    
+    return newState
+    
+  }
+
+  function getAllLabelsFromState(state) {
+    let labels = []
+    state.map(({label}) => {
+      labels.push(label)
+    })
+    return labels
+  }
+
+  function cloneMapState(state) {
+    let result = []
+    state.forEach((record) => {
+      result.push({...record})
+    })
+    return result
   }
 
   function changeFieldValue(state, idString, value) {
@@ -81,18 +127,21 @@ export default function JsonViewer(props) {
     return result
   }
 
-  function findFirstChecked() {
-    for (let i=0; i<1; i++) {
-      if (mapState[i].checked) {
+  function findFirstChecked(state, begin=0) {
+    for (let i=begin; i<state.length; i++) {
+      if (state[i].checked) {
         return i
       }
     }
     return -1
   }
   
-  function findLastChecked() {
-    for (let i=(mapState.length-1); i>=0; i--) {
-      if (mapState[i].checked) {
+  function findLastChecked(state, begin=-1) {
+    if (begin === -1){
+      begin = state.length - 1
+    }
+    for (let i=begin; i>=0; i--) {
+      if (state[i].checked) {
         return i
       }
     }
@@ -114,44 +163,27 @@ export default function JsonViewer(props) {
     sendData();
   }, [mapState]);
 
-  function moveItem(direction, pivotKey) {
-    let position;
-    let keyValue;
-    Object.keys(mapStatus).map((key, index) => {
-      if (key === pivotKey) {
-        position = index;
-        keyValue = mapStatus[key];
-      }
-    });
+  function moveItem(state, direction, idString) {
+    const moveId = parseInt(idString)
+    const moveTo = direction==="up"?findLastChecked(state, moveId-1):findFirstChecked(state, moveId+1)
 
-    let newPosition = direction === 'up' ? position - 1 : position + 1;
-    let newResult = {};
-    let newIndex = 0;
-    Object.keys(mapStatus).map((key, index) => {
-      if (newIndex === newPosition) {
-        // insert moved value here
-        newResult[pivotKey] = keyValue;
-        newIndex += 1;
-        console.log('replaced at position: ' + newIndex);
-      }
-      if (index !== position) {
-        newResult[key] = mapStatus[key];
-        newIndex += 1;
-      }
-      if (newIndex === newPosition) {
-        // insert moved value here
-        newResult[pivotKey] = keyValue;
-        newIndex += 1;
-        console.log('replaced at position: ' + newIndex);
-      }
-    });
+    console.log("moving " + moveId + " to " + moveTo)
 
-    setMapStatus(newResult);
-    if (moved === ' ') {
-      setMoved('');
-    } else {
-      setMoved(' ');
-    }
+    // store the moveId into the result array
+    let result = Array(state.length)
+    result[moveTo] = state[moveId]
+
+    //copy the rest, skip moveId in state, and moveTo in result
+    let resultInd = 0
+    state.forEach((record, index) => {
+      if (resultInd == moveTo) {
+        resultInd++
+      }
+      if (moveId !== index) {
+        result[resultInd++] = {...record}
+      }
+    })
+    return result
   }
 
   function renderFieldNameItem(id, label, value, first, last) {
@@ -188,8 +220,10 @@ export default function JsonViewer(props) {
                   size="small"
                   disabled={id === first}
                   onClick={() => {
-                    moveItem('up', index);
-                  }}
+                    dispatch({
+                      type: "up",
+                      id: id
+                  })}}
                 >
                   <KeyboardArrowUpRounded fontSize="tiny" />
                 </IconButton>
@@ -198,19 +232,17 @@ export default function JsonViewer(props) {
                   aria-label="move downwards"
                   size="small"
                   disabled={id === last}
-                  onClick={() => {} }
+                  onClick={() => {
+                    dispatch({
+                      type: "down",
+                      id: id
+                    })
+                  } }
                 >
                   <KeyboardArrowDownRounded fontSize="tiny" />
                 </IconButton>
               </Box>
 
-              <IconButton
-                aria-label="delete item"
-                size="small"
-                onClick={() => handleDeleteButton(index)}
-              >
-                <Delete fontSize="tiny" />
-              </IconButton>
             </InputAdornment>
           ),
         }}
@@ -220,12 +252,12 @@ export default function JsonViewer(props) {
 
   function generateFieldNameView() {
     // find first and last checked elements for the up/down arrows
-    const first = findFirstChecked()
-    const last = findLastChecked()
+    const first = findFirstChecked(mapState)
+    const last = findLastChecked(mapState)
 
     return (
       mapState.map((record, index) => {
-        return renderFieldNameItem(index, record.label, record.value, first, last)
+        return record.checked && renderFieldNameItem(index, record.label, record.value, first, last)
     })
   
     )
@@ -244,7 +276,7 @@ export default function JsonViewer(props) {
   function generateTitleLine() {
     return (
       <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-        <Typography variant="h7" component="h7">
+        <Typography variant="h6" component="h6">
           {props.title}
         </Typography>
 
@@ -253,13 +285,6 @@ export default function JsonViewer(props) {
         </IconButton>
       </Box>
     );
-  }
-
-  function addField() {
-    let newResult = { ...mapStatus };
-    newResult[newField] = '';
-    setMapStatus(newResult);
-    setNewField('');
   }
 
   function keyPress(e) {
@@ -296,15 +321,17 @@ export default function JsonViewer(props) {
     return lists
   }
 
-
-
-  function renderItem(label, checked) {
+  function renderItem(label, checked, id) {
     return (
     <ListItem key={label}>
-      <ListItemText id={label} primary={label} />
+      <ListItemText id={String(id)} primary={label} />
       <Checkbox
                   edge="end"
                   checked={checked}
+                  onClick={() => dispatch({
+                    type: "flip",
+                    id: id
+                  })}
                   tabIndex={-1}
                   disableRipple
                   inputProps={{ 'aria-labelledby': label }}
@@ -314,15 +341,13 @@ export default function JsonViewer(props) {
   } 
 
   function generateCheckListItems() {
-    let lists = generateCheckList()
+    //let lists = generateCheckList()
     return (
       <List dense={true}>
-        {Object.keys(lists.active).map((label) => {
-          return (renderItem(label, lists.active[label]))
+        {mapState.map((record, index) => {
+          return (renderItem(record.label, record.checked, index))
         })}
-        {Object.keys(lists.preset).map((label) => {
-          return (renderItem(label, lists.preset[label]))
-        })}
+
       </List>
     )
   }
@@ -346,7 +371,34 @@ export default function JsonViewer(props) {
           noValidate
           autoComplete="off"
         >
+          <Stack>
+          <TextField
+            id="combo-box-demo"
+            sx={{ width: '25ch' }}
+            onChange={(event) => setNewField(event.target.value)}
+            value={newField}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="add item"
+                    size="small"
+                    onClick={() => {
+                      dispatch({
+                        type: "add",
+                        value: String(newField)
+                      });
+                      setNewField("")
+                    }}
+                  >
+                    <AddIcon fontSize="tiny" />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
         {generateCheckListItems()}
+        </Stack>
         </Box>
       </Popover>
     );
@@ -362,10 +414,9 @@ export default function JsonViewer(props) {
         noValidate
         autoComplete="off"
       >
-        {//generateTitleLine()
+        {generateTitleLine()
         }
-        {//getPopOver()
-        }
+        {getPopOver()        }
 
         {generateFieldNameView()}
       </Box>
