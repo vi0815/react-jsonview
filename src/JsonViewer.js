@@ -60,7 +60,6 @@ export default function JsonViewer(props) {
   const [newField, setNewField] = React.useState("")
 
   function reducer(state, action) {
-    console.log(action.type)
     let newState
     if (action.type === "change") {
       newState = changeFieldValue(state, action.id, action.value)
@@ -166,8 +165,6 @@ export default function JsonViewer(props) {
   function moveItem(state, direction, idString) {
     const moveId = parseInt(idString)
     const moveTo = direction==="up"?findLastChecked(state, moveId-1):findFirstChecked(state, moveId+1)
-
-    console.log("moving " + moveId + " to " + moveTo)
 
     // store the moveId into the result array
     let result = Array(state.length)
