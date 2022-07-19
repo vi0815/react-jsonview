@@ -1,64 +1,133 @@
 import React from 'react';
-import './style.css';
 import TextField from '@mui/material/TextField';
 import Popover from '@mui/material/Popover';
-import Button from '@mui/material/Button';
 import AddIcon from '@mui/icons-material/Add';
-import { Typography } from "@mui/material"
+import { Typography } from '@mui/material';
 import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
 import InputAdornment from '@mui/material/InputAdornment';
 import IconButton from '@mui/material/IconButton';
+import ListItemText from '@mui/material/ListItemText';
+import List from '@mui/material/List';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import Checkbox from '@mui/material/Checkbox';
+
+import ListItem from '@mui/material/ListItem';
+
+
 import {
   Delete,
-  AddCircleOutlineIcon,
   KeyboardArrowUpRounded,
   KeyboardArrowDownRounded,
 } from '@mui/icons-material';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import Autocomplete from '@mui/material/Autocomplete';
+import PropTypes from 'prop-types';
+
+JsonViewer.propTypes = {
+  /*
+  Start object that should be displayed. Can be an useState that is used with on onChange as well
+   */
+  data: PropTypes.object.isRequired,
+  /*
+  Title that is displayed on top as a typography object
+   */
+  title: PropTypes.string.isRequired,
+  /*
+  Function that is called to receive the changes. The return argument is an ordered object
+  */
+  onChange: PropTypes.func.isRequired,
+};
+
+function convertOuterObjectToInternal(data) {
+  let fieldNameStatus = []
+  Object.keys(data).map((fieldName) => {
+    const newFieldObject = {
+      label: fieldName,
+      value: data[fieldName],
+      checked: true,
+      wasPreset: false
+    }
+    fieldNameStatus.push(newFieldObject)
+  })
+  return fieldNameStatus
+}
+
 
 export default function JsonViewer(props) {
-  const [data, setData] = React.useState(props.data);
-  const [newField, setNewField] = React.useState("");
-
+  const [mapState, dispatch] = React.useReducer(reducer, convertOuterObjectToInternal(props.data));
   const [anchorEl, setAnchorEl] = React.useState(null);
 
-  const [moved, setMoved] = React.useState(" ");
-
-  function handleDeleteButton(deleteKey) {
-    let newHash = {};
-    Object.keys(data).map((key) => {
-      if (key != deleteKey) {
-        newHash[key] = data[key];
-      }
-    });
-    setData(newHash);
+  function reducer(state, action) {
+    let newState
+    if (action.type === "change") {
+      newState = changeFieldValue(state, action.id, action.value)
+    } else {
+      
+    }
+    return newState
   }
 
+  function changeFieldValue(state, idString, value) {
+    const id = parseInt(idString)
+    let result = []
+    for (let i=0; i<state.length; i++) {
+      if (i == id) {
+        let newObject = {...state[i]}
+        newObject.value = value
+        result.push(newObject)
+      } else {
+        result.push({...state[i]})
+      }
+    }
+    return result
+  }
+
+  function findFirstChecked() {
+    for (let i=0; i<1; i++) {
+      if (mapState[i].checked) {
+        return i
+      }
+    }
+    return -1
+  }
+  
+  function findLastChecked() {
+    for (let i=(mapState.length-1); i>=0; i--) {
+      if (mapState[i].checked) {
+        return i
+      }
+    }
+    return -1
+  }
+
+
   function sendData() {
-    props.onChange({...data})
+    let result = {}
+    mapState.forEach((record) => {
+      if (record.checked === true) {
+        result[record.label] = record.value
+      }
+    })
+    props.onChange({ result });
   }
 
   React.useEffect(() => {
-    sendData()
-  }, [data]);
+    sendData();
+  }, [mapState]);
 
   function moveItem(direction, pivotKey) {
     let position;
     let keyValue;
-    Object.keys(data).map((key, index) => {
+    Object.keys(mapStatus).map((key, index) => {
       if (key === pivotKey) {
         position = index;
-        keyValue = data[key];
+        keyValue = mapStatus[key];
       }
     });
 
     let newPosition = direction === 'up' ? position - 1 : position + 1;
     let newResult = {};
     let newIndex = 0;
-    console.log('Oldposition: ' + position + ' newposition: ' + newPosition);
-    Object.keys(data).map((key, index) => {
+    Object.keys(mapStatus).map((key, index) => {
       if (newIndex === newPosition) {
         // insert moved value here
         newResult[pivotKey] = keyValue;
@@ -66,7 +135,7 @@ export default function JsonViewer(props) {
         console.log('replaced at position: ' + newIndex);
       }
       if (index !== position) {
-        newResult[key] = data[key];
+        newResult[key] = mapStatus[key];
         newIndex += 1;
       }
       if (newIndex === newPosition) {
@@ -76,89 +145,90 @@ export default function JsonViewer(props) {
         console.log('replaced at position: ' + newIndex);
       }
     });
-    console.log(newResult);
-    setData(newResult);
-    if (moved === " ") {
-      setMoved("")
-    } else {
-        setMoved(" ")
-      }
-    
-  }
 
-  function changeData(event) {
-    const id = event.target.id
-    // has the value changed?
-    if (data[id] !== event.target.value) {
-      let newData = {...data}
-      newData[id] = event.target.value
-      setData(newData)
+    setMapStatus(newResult);
+    if (moved === ' ') {
+      setMoved('');
+    } else {
+      setMoved(' ');
     }
   }
 
-  function generateObjectFieldTextFields() {
-    return Object.keys(data).map((key, index) => {
-      return (
-        <TextField
-          id={key}
-          key={key}
-          label={key}
-          variant="standard"
-          defaultValue={data[key]}
-          onBlur={changeData}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    '& > :not(style)': {
-                      m: 0,
-                      mt: 0.5,
-                      width: 5,
-                      height: 5,
-                    },
+  function renderFieldNameItem(id, label, value, first, last) {
+    return (
+      <TextField
+        id={String(id)}
+        key={label}
+        variant="standard"
+        defaultValue={value}
+        label={label}
+        onBlur={(event) => dispatch({
+          type: "change",
+          id: event.target.id,
+          value: event.target.value
+        })}
+        fullWidth
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  '& > :not(style)': {
+                    m: 0,
+                    mt: 0.5,
+                    width: 5,
+                    height: 5,
+                  },
+                }}
+              >
+                <IconButton
+                  aria-label="move upwards"
+                  size="small"
+                  disabled={id === first}
+                  onClick={() => {
+                    moveItem('up', index);
                   }}
                 >
-                  <IconButton
-                    aria-label="move upwards"
-                    size="small"
-                    disabled={index === 0 ? true : false}
-                    onClick={() => {
-                      moveItem('up', key);
-                    }}
-                  >
-                    <KeyboardArrowUpRounded fontSize="tiny" />
-                  </IconButton>
-
-                  <IconButton
-                    aria-label="move downwards"
-                    size="small"
-                    disabled={
-                      index === Object.keys(data).length - 1 ? true : false
-                    }
-                    onClick={() => {
-                      moveItem('down', key);
-                    }}
-                  >
-                    <KeyboardArrowDownRounded fontSize="tiny" />
-                  </IconButton>
-                </Box>
+                  <KeyboardArrowUpRounded fontSize="tiny" />
+                </IconButton>
 
                 <IconButton
-                  aria-label="delete item"
+                  aria-label="move downwards"
                   size="small"
-                  onClick={() => handleDeleteButton(key)}
+                  disabled={id === last}
+                  onClick={() => {} }
                 >
-                  <Delete fontSize="tiny" />
+                  <KeyboardArrowDownRounded fontSize="tiny" />
                 </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
-      );
-    });
+              </Box>
+
+              <IconButton
+                aria-label="delete item"
+                size="small"
+                onClick={() => handleDeleteButton(index)}
+              >
+                <Delete fontSize="tiny" />
+              </IconButton>
+            </InputAdornment>
+          ),
+        }}
+      />
+    )
+  }
+
+  function generateFieldNameView() {
+    // find first and last checked elements for the up/down arrows
+    const first = findFirstChecked()
+    const last = findLastChecked()
+
+    return (
+      mapState.map((record, index) => {
+        return renderFieldNameItem(index, record.label, record.value, first, last)
+    })
+  
+    )
   }
 
   function clickAddItem(event) {
@@ -174,7 +244,9 @@ export default function JsonViewer(props) {
   function generateTitleLine() {
     return (
       <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-        <Typography variant="h6" component="h6">{props.title}</Typography>
+        <Typography variant="h7" component="h7">
+          {props.title}
+        </Typography>
 
         <IconButton aria-label="Add entry" size="small" onClick={clickAddItem}>
           <AddIcon fontSize="small" />
@@ -184,10 +256,75 @@ export default function JsonViewer(props) {
   }
 
   function addField() {
-    let newResult = { ...data };
+    let newResult = { ...mapStatus };
     newResult[newField] = '';
-    setData(newResult);
-    setNewField("")
+    setMapStatus(newResult);
+    setNewField('');
+  }
+
+  function keyPress(e) {
+    if (e.code === 'Enter') {
+      e.preventDefault();
+      addField();
+    }
+  }
+
+  /* generateCheckList creates a list for all active field names, marked removed field names and preset field names that are
+  neither in removed or activate field list */
+  function generateCheckList() {
+    let lists = {
+      active: {},
+      inactive: {},
+      preset: {}
+    }
+    // collect active elements
+    Object.keys(mapStatus).map((key) => {
+      lists.active[key] = true
+    })
+
+    // collect inactive elements
+    Object.keys(inactive).map((key) => {
+      lists.inactive[key] = false
+    })
+
+    // collect preset, but remove elements that are already in active or inactive list
+    fieldNames.forEach((element) => {
+      if (!Object.keys(lists.active).includes(element.label) && !Object.keys(lists.inactive).includes(element.label)) {
+        lists.preset[element.label] = false
+      }
+    })
+    return lists
+  }
+
+
+
+  function renderItem(label, checked) {
+    return (
+    <ListItem key={label}>
+      <ListItemText id={label} primary={label} />
+      <Checkbox
+                  edge="end"
+                  checked={checked}
+                  tabIndex={-1}
+                  disableRipple
+                  inputProps={{ 'aria-labelledby': label }}
+      />
+    </ListItem>
+      )
+  } 
+
+  function generateCheckListItems() {
+    let lists = generateCheckList()
+    return (
+      <List dense={true}>
+        {Object.keys(lists.active).map((label) => {
+          return (renderItem(label, lists.active[label]))
+        })}
+        {Object.keys(lists.preset).map((label) => {
+          return (renderItem(label, lists.preset[label]))
+        })}
+      </List>
+    )
   }
 
   function getPopOver() {
@@ -204,30 +341,12 @@ export default function JsonViewer(props) {
         <Box
           component="form"
           sx={{
-            '& > :not(style)': { m: 0, height: '50ch' },
+            '& > :not(style)': { m: 0, height: "50ch" },
           }}
           noValidate
           autoComplete="off"
         >
-          <TextField
-            id="combo-box-demo"
-            sx={{ width: '25ch' }}
-            onChange={(event) => setNewField(event.target.value)}
-            value={newField}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    aria-label="delete item"
-                    size="small"
-                    onClick={() => addField()}
-                  >
-                    <AddIcon fontSize="tiny" />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
+        {generateCheckListItems()}
         </Box>
       </Popover>
     );
@@ -238,16 +357,17 @@ export default function JsonViewer(props) {
       <Box
         component="form"
         sx={{
-          '& > :not(style)': { m: 0, width: '50ch' },
+          '& > :not(style)': { m: 0 },
         }}
         noValidate
         autoComplete="off"
       >
-        {generateTitleLine()}
-        {getPopOver()}
+        {//generateTitleLine()
+        }
+        {//getPopOver()
+        }
 
-        {generateObjectFieldTextFields()}
-        {moved}
+        {generateFieldNameView()}
       </Box>
     </div>
   );
