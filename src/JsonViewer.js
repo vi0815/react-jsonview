@@ -16,7 +16,6 @@ import Checkbox from '@mui/material/Checkbox';
 
 import ListItem from '@mui/material/ListItem';
 
-
 import {
   Delete,
   KeyboardArrowUpRounded,
@@ -40,121 +39,122 @@ JsonViewer.propTypes = {
 };
 
 function convertOuterObjectToInternal(data) {
-  let fieldNameStatus = []
+  let fieldNameStatus = [];
   Object.keys(data).map((fieldName) => {
     const newFieldObject = {
       label: fieldName,
       value: data[fieldName],
       checked: true,
-      wasPreset: false
-    }
-    fieldNameStatus.push(newFieldObject)
-  })
-  return fieldNameStatus
+      wasPreset: false,
+    };
+    fieldNameStatus.push(newFieldObject);
+  });
+  return fieldNameStatus;
 }
 
-
 export default function JsonViewer(props) {
-  const [mapState, dispatch] = React.useReducer(reducer, convertOuterObjectToInternal(props.data));
+  const [mapState, dispatch] = React.useReducer(
+    reducer,
+    convertOuterObjectToInternal(props.data)
+  );
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const [newField, setNewField] = React.useState("")
+  const [newField, setNewField] = React.useState('');
 
   function reducer(state, action) {
-    let newState
-    if (action.type === "change") {
-      newState = changeFieldValue(state, action.id, action.value)
-    } else if (action.type === "up" || action.type ==="down") {
-      newState = moveItem(state, action.type, action.id)
-    } else if (action.type === "add") {
-      newState = addField(state, action.value)
-    } else if (action.type === "flip") {
-      newState = flipState(state, action.id)
-    }    return newState
+    let newState;
+    if (action.type === 'change') {
+      newState = changeFieldValue(state, action.id, action.value);
+    } else if (action.type === 'up' || action.type === 'down') {
+      newState = moveItem(state, action.type, action.id);
+    } else if (action.type === 'add') {
+      newState = addField(state, action.value);
+    } else if (action.type === 'flip') {
+      newState = flipState(state, action.id);
+    }
+    return newState;
   }
 
   function flipState(state, id) {
-    let newState = cloneMapState(state)
-    newState[id].checked = !newState[id].checked
-    return newState
+    let newState = cloneMapState(state);
+    newState[id].checked = !newState[id].checked;
+    return newState;
   }
 
   function addField(state, value) {
     // check if this label already exists
-    if (getAllLabelsFromState(state).includes(value)) {
-      return state
+    if (value === '' || getAllLabelsFromState(state).includes(value)) {
+      return state;
     }
 
-    let newState = cloneMapState(state)
+    let newState = cloneMapState(state);
     newState.push({
       label: value,
       checked: true,
-      preset: false
-    })
-    
-    return newState
-    
+      preset: false,
+    });
+
+    return newState;
   }
 
   function getAllLabelsFromState(state) {
-    let labels = []
-    state.map(({label}) => {
-      labels.push(label)
-    })
-    return labels
+    let labels = [];
+    state.map(({ label }) => {
+      labels.push(label);
+    });
+    return labels;
   }
 
   function cloneMapState(state) {
-    let result = []
+    let result = [];
     state.forEach((record) => {
-      result.push({...record})
-    })
-    return result
+      result.push({ ...record });
+    });
+    return result;
   }
 
   function changeFieldValue(state, idString, value) {
-    const id = parseInt(idString)
-    let result = []
-    for (let i=0; i<state.length; i++) {
+    const id = parseInt(idString);
+    let result = [];
+    for (let i = 0; i < state.length; i++) {
       if (i == id) {
-        let newObject = {...state[i]}
-        newObject.value = value
-        result.push(newObject)
+        let newObject = { ...state[i] };
+        newObject.value = value;
+        result.push(newObject);
       } else {
-        result.push({...state[i]})
+        result.push({ ...state[i] });
       }
     }
-    return result
+    return result;
   }
 
-  function findFirstChecked(state, begin=0) {
-    for (let i=begin; i<state.length; i++) {
+  function findFirstChecked(state, begin = 0) {
+    for (let i = begin; i < state.length; i++) {
       if (state[i].checked) {
-        return i
+        return i;
       }
     }
-    return -1
-  }
-  
-  function findLastChecked(state, begin=-1) {
-    if (begin === -1){
-      begin = state.length - 1
-    }
-    for (let i=begin; i>=0; i--) {
-      if (state[i].checked) {
-        return i
-      }
-    }
-    return -1
+    return -1;
   }
 
+  function findLastChecked(state, begin = -1) {
+    if (begin === -1) {
+      begin = state.length - 1;
+    }
+    for (let i = begin; i >= 0; i--) {
+      if (state[i].checked) {
+        return i;
+      }
+    }
+    return -1;
+  }
 
   function sendData() {
-    let result = {}
+    let result = {};
     mapState.forEach((record) => {
       if (record.checked === true) {
-        result[record.label] = record.value
+        result[record.label] = record.value;
       }
-    })
+    });
     props.onChange({ result });
   }
 
@@ -163,24 +163,27 @@ export default function JsonViewer(props) {
   }, [mapState]);
 
   function moveItem(state, direction, idString) {
-    const moveId = parseInt(idString)
-    const moveTo = direction==="up"?findLastChecked(state, moveId-1):findFirstChecked(state, moveId+1)
+    const moveId = parseInt(idString);
+    const moveTo =
+      direction === 'up'
+        ? findLastChecked(state, moveId - 1)
+        : findFirstChecked(state, moveId + 1);
 
     // store the moveId into the result array
-    let result = Array(state.length)
-    result[moveTo] = state[moveId]
+    let result = Array(state.length);
+    result[moveTo] = state[moveId];
 
     //copy the rest, skip moveId in state, and moveTo in result
-    let resultInd = 0
+    let resultInd = 0;
     state.forEach((record, index) => {
       if (resultInd == moveTo) {
-        resultInd++
+        resultInd++;
       }
       if (moveId !== index) {
-        result[resultInd++] = {...record}
+        result[resultInd++] = { ...record };
       }
-    })
-    return result
+    });
+    return result;
   }
 
   function renderFieldNameItem(id, label, value, first, last) {
@@ -191,11 +194,13 @@ export default function JsonViewer(props) {
         variant="standard"
         defaultValue={value}
         label={label}
-        onBlur={(event) => dispatch({
-          type: "change",
-          id: event.target.id,
-          value: event.target.value
-        })}
+        onBlur={(event) =>
+          dispatch({
+            type: 'change',
+            id: event.target.id,
+            value: event.target.value,
+          })
+        }
         fullWidth
         InputProps={{
           endAdornment: (
@@ -218,9 +223,10 @@ export default function JsonViewer(props) {
                   disabled={id === first}
                   onClick={() => {
                     dispatch({
-                      type: "up",
-                      id: id
-                  })}}
+                      type: 'up',
+                      id: id,
+                    });
+                  }}
                 >
                   <KeyboardArrowUpRounded fontSize="tiny" />
                 </IconButton>
@@ -231,33 +237,32 @@ export default function JsonViewer(props) {
                   disabled={id === last}
                   onClick={() => {
                     dispatch({
-                      type: "down",
-                      id: id
-                    })
-                  } }
+                      type: 'down',
+                      id: id,
+                    });
+                  }}
                 >
                   <KeyboardArrowDownRounded fontSize="tiny" />
                 </IconButton>
               </Box>
-
             </InputAdornment>
           ),
         }}
       />
-    )
+    );
   }
 
   function generateFieldNameView() {
     // find first and last checked elements for the up/down arrows
-    const first = findFirstChecked(mapState)
-    const last = findLastChecked(mapState)
+    const first = findFirstChecked(mapState);
+    const last = findLastChecked(mapState);
 
-    return (
-      mapState.map((record, index) => {
-        return record.checked && renderFieldNameItem(index, record.label, record.value, first, last)
-    })
-  
-    )
+    return mapState.map((record, index) => {
+      return (
+        record.checked &&
+        renderFieldNameItem(index, record.label, record.value, first, last)
+      );
+    });
   }
 
   function clickAddItem(event) {
@@ -297,56 +302,93 @@ export default function JsonViewer(props) {
     let lists = {
       active: {},
       inactive: {},
-      preset: {}
-    }
+      preset: {},
+    };
     // collect active elements
     Object.keys(mapStatus).map((key) => {
-      lists.active[key] = true
-    })
+      lists.active[key] = true;
+    });
 
     // collect inactive elements
     Object.keys(inactive).map((key) => {
-      lists.inactive[key] = false
-    })
+      lists.inactive[key] = false;
+    });
 
     // collect preset, but remove elements that are already in active or inactive list
     fieldNames.forEach((element) => {
-      if (!Object.keys(lists.active).includes(element.label) && !Object.keys(lists.inactive).includes(element.label)) {
-        lists.preset[element.label] = false
+      if (
+        !Object.keys(lists.active).includes(element.label) &&
+        !Object.keys(lists.inactive).includes(element.label)
+      ) {
+        lists.preset[element.label] = false;
       }
-    })
-    return lists
+    });
+    return lists;
   }
 
   function renderItem(label, checked, id) {
     return (
-    <ListItem key={label}>
-      <ListItemText id={String(id)} primary={label} />
-      <Checkbox
-                  edge="end"
-                  checked={checked}
-                  onClick={() => dispatch({
-                    type: "flip",
-                    id: id
-                  })}
-                  tabIndex={-1}
-                  disableRipple
-                  inputProps={{ 'aria-labelledby': label }}
-      />
-    </ListItem>
-      )
-  } 
+      <ListItem key={label}>
+        <ListItemText id={String(id)} primary={label} />
+        <Checkbox
+          edge="end"
+          checked={checked}
+          onClick={() =>
+            dispatch({
+              type: 'flip',
+              id: id,
+            })
+          }
+          tabIndex={-1}
+          disableRipple
+          inputProps={{ 'aria-labelledby': label }}
+        />
+      </ListItem>
+    );
+  }
 
   function generateCheckListItems() {
     //let lists = generateCheckList()
     return (
       <List dense={true}>
         {mapState.map((record, index) => {
-          return (renderItem(record.label, record.checked, index))
+          return renderItem(record.label, record.checked, index);
         })}
-
       </List>
-    )
+    );
+  }
+
+
+  function renderNewFieldTextField() {
+    return (
+      <TextField
+        id="combo-box-demo"
+        label="New Fieldname"
+        sx={{ width: '25ch' }}
+        variant="filled"
+        onChange={(event) => setNewField(event.target.value)}
+        value={newField}
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton
+                aria-label="add item"
+                size="small"
+                onClick={() => {
+                  dispatch({
+                    type: 'add',
+                    value: String(newField),
+                  });
+                  setNewField('');
+                }}
+              >
+                <AddIcon fontSize="tiny" />
+              </IconButton>
+            </InputAdornment>
+          ),
+        }}
+      />
+    );
   }
 
   function getPopOver() {
@@ -363,39 +405,15 @@ export default function JsonViewer(props) {
         <Box
           component="form"
           sx={{
-            '& > :not(style)': { m: 0, height: "50ch" },
+            '& > :not(style)': { m: 0, height: '50ch' },
           }}
           noValidate
           autoComplete="off"
         >
           <Stack>
-          <TextField
-            id="combo-box-demo"
-            sx={{ width: '25ch' }}
-            onChange={(event) => setNewField(event.target.value)}
-            value={newField}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    aria-label="add item"
-                    size="small"
-                    onClick={() => {
-                      dispatch({
-                        type: "add",
-                        value: String(newField)
-                      });
-                      setNewField("")
-                    }}
-                  >
-                    <AddIcon fontSize="tiny" />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-        {generateCheckListItems()}
-        </Stack>
+            {renderNewFieldTextField()}
+            {generateCheckListItems()}
+          </Stack>
         </Box>
       </Popover>
     );
@@ -411,9 +429,8 @@ export default function JsonViewer(props) {
         noValidate
         autoComplete="off"
       >
-        {generateTitleLine()
-        }
-        {getPopOver()        }
+        {generateTitleLine()}
+        {getPopOver()}
 
         {generateFieldNameView()}
       </Box>
@@ -425,6 +442,6 @@ const fieldNames = [
   { label: 'addressLine1' },
   { label: 'addressLine2' },
   { label: 'city' },
-  { label: 'postcode' },
+  { label: 'postCode' },
   { label: 'country' },
 ];
