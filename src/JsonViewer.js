@@ -2,7 +2,7 @@ import React from 'react';
 import TextField from '@mui/material/TextField';
 import Popover from '@mui/material/Popover';
 import AddIcon from '@mui/icons-material/Add';
-import { Typography } from '@mui/material';
+import { Typography, Divider } from '@mui/material';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 
@@ -22,6 +22,16 @@ import {
   KeyboardArrowDownRounded,
 } from '@mui/icons-material';
 import PropTypes from 'prop-types';
+
+
+const presetFieldNames = [
+  { label: 'addressLine1' },
+  { label: 'addressLine2' },
+  { label: 'city' },
+  { label: 'postCode' },
+  { label: 'country' },
+];
+
 
 JsonViewer.propTypes = {
   /*
@@ -67,12 +77,13 @@ export default function JsonViewer(props) {
     } else if (action.type === 'up' || action.type === 'down') {
       newState = moveItem(state, action.type, action.id);
     } else if (action.type === 'add') {
-      newState = addField(state, action.value);
+      newState = addField(state, action.value, action.preset);
     } else if (action.type === 'flip') {
       newState = flipState(state, action.id);
     }
     return newState;
   }
+
 
   function flipState(state, id) {
     let newState = cloneMapState(state);
@@ -80,7 +91,7 @@ export default function JsonViewer(props) {
     return newState;
   }
 
-  function addField(state, value) {
+  function addField(state, value, preset) {
     // check if this label already exists
     if (value === '' || getAllLabelsFromState(state).includes(value)) {
       return state;
@@ -90,7 +101,7 @@ export default function JsonViewer(props) {
     newState.push({
       label: value,
       checked: true,
-      preset: false,
+      preset: preset,
     });
 
     return newState;
@@ -275,7 +286,7 @@ export default function JsonViewer(props) {
 
   const open = Boolean(anchorEl);
 
-  function generateTitleLine() {
+  function generateTitle() {
     return (
       <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
         <Typography variant="h6" component="h6">
@@ -359,6 +370,31 @@ export default function JsonViewer(props) {
   }
 
 
+  function generatePresetListItems() {
+    let currentFieldNames = getAllLabelsFromState(mapState)
+
+    return (
+      <List dense={true}>
+      {presetFieldNames.map((record) => {
+        return (!currentFieldNames.includes(record.label) &&
+        <ListItem key={record.label}
+          button={true}
+          onClick={() => 
+            dispatch({
+              type: "add",
+              value: record.label,
+              preset: true
+            })}
+            >
+          <ListItemText id={record.label} primary={record.label} />
+
+          </ListItem>)
+  })}
+      </List>)
+      }
+    
+
+
   function renderNewFieldTextField() {
     return (
       <TextField
@@ -378,6 +414,7 @@ export default function JsonViewer(props) {
                   dispatch({
                     type: 'add',
                     value: String(newField),
+                    preset: false
                   });
                   setNewField('');
                 }}
@@ -412,7 +449,10 @@ export default function JsonViewer(props) {
         >
           <Stack>
             {renderNewFieldTextField()}
+            <Divider />
             {generateCheckListItems()}
+            <Divider />
+            {generatePresetListItems()}
           </Stack>
         </Box>
       </Popover>
@@ -429,7 +469,7 @@ export default function JsonViewer(props) {
         noValidate
         autoComplete="off"
       >
-        {generateTitleLine()}
+        {generateTitle()}
         {getPopOver()}
 
         {generateFieldNameView()}
@@ -437,11 +477,3 @@ export default function JsonViewer(props) {
     </div>
   );
 }
-
-const fieldNames = [
-  { label: 'addressLine1' },
-  { label: 'addressLine2' },
-  { label: 'city' },
-  { label: 'postCode' },
-  { label: 'country' },
-];
